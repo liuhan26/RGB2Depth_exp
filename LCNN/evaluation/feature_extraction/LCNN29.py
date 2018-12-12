@@ -5,12 +5,11 @@ import tensorflow as tf
 import model as M
 import numpy as np
 
+def LCNN29(image):
+    # with tf.name_scope('img_holder'):
+    #     img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
 
-def LCNN29():
-    with tf.name_scope('img_holder'):
-        img_holder = tf.placeholder(tf.float32, [None, 128, 128, 3])
-
-    mod = M.Model(img_holder, [None, 128, 128, 3])
+    mod = M.Model(image, [None, 128, 128, 2])
 
     mod.conv_layer(5, 96, activation=1)
     mod.maxpooling_layer(2, 2)  # pool1
@@ -59,7 +58,7 @@ def LCNN29():
     mod.fcnn_layer(512)
     feature_layer = mod.get_current_layer()[0]
 
-    return feature_layer, img_holder
+    return feature_layer
 
 
 with tf.variable_scope('LCNN29'):
