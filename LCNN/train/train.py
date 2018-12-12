@@ -72,11 +72,19 @@ def main():
     root_folder = '../../eaststation/'
     tfrecord_path = '../../eaststation/eaststation.tfrecord'
     write_tfrecord(root_folder, rgb_file_txt, depth_file_txt, tfrecord_path)
-    with tf.Graph().as_default():
-        images, label = input(1, tfrecord_path)
-        sess = tf.Session()
-        imgs = sess.run(images)
-        print(imgs)
+    images, label = input(1, tfrecord_path)
+    step = 0
+    with tf.Session() as sess:
+        init_op = tf.group(tf.local_variables_initializer(),tf.global_variables_initializer())
+        sess.run(init_op)
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+        while step < 3:
+            imgs = sess.run(images)
+            print(imgs)
+            step +=1
+        coord.request_stop()
+        coord.join(threads)
 
 
 if __name__ == "__main__":
