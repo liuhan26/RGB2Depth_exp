@@ -29,16 +29,16 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     depth_lines = f2.readlines()
     i = 0
     for rgb_line, depth_line in zip(rgb_lines, depth_lines):
-        rgb_path = rgb_line.split('\t')[0]
-        depth_path = depth_line.split('\t')[0]
+        rgb_path = root_folder + rgb_line.split('\t')[0]
+        depth_path = root_folder + depth_line.split('\t')[0]
         label = rgb_line.split('\t')[1].strip('\n')
         if os.path.exists(rgb_path) and os.path.exists(depth_path):
-            rgb = cv2.imread(root_folder + rgb_path, 0)
+            rgb = cv2.imread(rgb_path, 0)
             labels.append(label)
             # print(root_folder + rgb_path)
             i += 1
             print(i)
-            depth = cv2.imread(root_folder + depth_path, 0)
+            depth = cv2.imread(depth_path, 0)
             depth_de = fill_hole(depth)
             merge_img = np.concatenate((rgb[:, :, None], depth_de[:, :, None]), axis=2)
             imgs.append(merge_img)
