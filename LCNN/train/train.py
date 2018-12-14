@@ -4,7 +4,7 @@ import cv2
 import os
 from LCNN29 import LCNN29
 import argparse
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
 parser.add_argument('--lr', default='0.01', type=float, help='learning rate')
@@ -27,12 +27,16 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     labels = []
     with open(rgb_file_txt) as f:
         for line in f.readlines():
-            rgb = cv2.imread(root_folder + line.split(' ')[0], 0)
+            rgb = cv2.imread(root_folder + line.split('\t ')[0], 0)
             rgb_imgs.append(rgb)
-            labels.append(line.split(' ')[1].strip('\n'))
+            labels.append(line.split('\t')[1].strip('\n'))
     with open(depth_file_txt) as f:
+        i = 0
         for line in f.readlines():
-            depth = cv2.imread(root_folder + line.split(' ')[0], 0)
+            print(root_folder + line.split('\t')[0])
+            i += 1
+            print(i)
+            depth = cv2.imread(root_folder + line.split('\t')[0], 0)
             depth_de = fill_hole(depth)
             depth_imgs.append(depth_de)
     for i in range(len(rgb_imgs)):
@@ -85,9 +89,9 @@ def main():
     # rgb_file_txt = '/Volumes/Untitled/eaststation/test/test_3Dtexture.txt'
     # depth_file_txt = '/Volumes/Untitled/eaststation/test/test_3Ddepth.txt'
     # root_folder = '/Volumes/Untitled/eaststation/test/'
-    rgb_file_txt = '../../eaststation/train_3Dtexture.txt'
-    depth_file_txt = '../../eaststation/train_3Ddepth.txt'
-    root_folder = '../../eaststation/'
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
+    root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     tfrecord_path = '../../eaststation/eaststation.tfrecord'
     with open(rgb_file_txt) as f:
         lines = f.readlines()
