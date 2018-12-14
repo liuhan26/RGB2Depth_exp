@@ -125,7 +125,8 @@ def loadSess(model_path, sess):
             saver = tf.train.Saver()
             saver.restore(sess, model)
         else:
-            sess.run(tf.global_variables_initializer())
+            init_op = tf.group(tf.local_variables_initializer(), tf.global_variables_initializer())
+            sess.run(init_op)
             print('No checkpoint in the folder...')
 
     return sess, int(epoc), int(iters)

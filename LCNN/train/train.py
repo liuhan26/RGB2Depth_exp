@@ -3,14 +3,16 @@ import numpy as np
 import cv2
 import os
 from LCNN29 import LCNN29
+import model as M
 import argparse
+import shutil
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
 parser.add_argument('--lr', default='0.01', type=float, help='learning rate')
 parser.add_argument('--epoch', default='80', type=int, help='training epochs')
 parser.add_argument('--batch_size', default='128', type=int, help='min batch size')
-
+parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
 
 def fill_hole(depth_im):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
@@ -94,30 +96,42 @@ def main():
     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     tfrecord_path = '../../eaststation/eaststation.tfrecord'
-    with open(rgb_file_txt) as f:
-        lines = f.readlines()
-        train_iter = len(lines)
+
     if not os.path.exists(tfrecord_path):
         write_tfrecord(root_folder, rgb_file_txt, depth_file_txt, tfrecord_path)
     images, labels = input(args.batch_size, args.batch_size, tfrecord_path)
     loss, acc = LCNN29(images, labels)
     global_step = tf.Variable(0, trainable=False)
     learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
-                                               decay_steps=10*train_iter,
+                                               decay_steps=10*args.samples_num/args.batch_size,
                                                decay_rate=0.46)
     train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
     with tf.Session() as sess:
-        init_op = tf.group(tf.local_variables_initializer(), tf.global_variables_initializer())
-        sess.run(init_op)
+        sess, epoch, step = M.loadSess('../tfmodel/', sess)
+        saver = tf.train.Saver()
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-        step = 0
         try:
             while not coord.should_stop():
                 _, loss_value, lr = sess.run([train_op, loss, learning_rate])
                 step += 1
-                epoch = step / train_iter + 1
-                print('epoch = %d  iter = %d learning_rate = %.2f  loss = %.2f' % (epoch, step, lr, loss_value))
+                if (args.batch_size * step) % args.samples_num == 0:
+                    epoch += 1
+                if step % 1000 == 0:
+                    print('epoch = %d  iter = %d learning_rate = %.2f  loss = %.2f' % (epoch, step, lr, loss_value))
+                if step % 20000 == 0:
+                    save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
+                    saver.save(sess, save_path)
+                    save_path2 = save_path + '.meta'
+                    save_path3 = save_path + '.index'
+                    save_path4 = save_path + '.data-00000-of-00001'
+                    save_path5 = '../tfmodel/checkpoint'
+
+                    shutil.copy(save_path2, save_path2.replace('../tfmodel/', '../backup/'))
+                    shutil.copy(save_path3, save_path3.replace('../tfmodel/', '../backup/'))
+                    shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
+                    shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
+
         except tf.errors.OutOfRangeError:
             print('Done training for %d steps' % (step))
         finally:
