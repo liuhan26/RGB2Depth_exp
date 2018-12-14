@@ -21,27 +21,27 @@ def fill_hole(depth_im):
 
 
 def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
-    rgb_imgs = []
-    depth_imgs = []
     imgs = []
     labels = []
-    with open(rgb_file_txt) as f:
-        for line in f.readlines():
-            rgb = cv2.imread(root_folder + line.split('\t ')[0], 0)
-            rgb_imgs.append(rgb)
-            labels.append(line.split('\t')[1].strip('\n'))
-    with open(depth_file_txt) as f:
-        i = 0
-        for line in f.readlines():
-            print(root_folder + line.split('\t')[0])
+    f1 = open(rgb_file_txt)
+    rgb_lines = f1.readlines()
+    f2 = open(depth_file_txt)
+    depth_lines = f2.readlines()
+    i = 0
+    for rgb_line, depth_line in zip(rgb_lines, depth_lines):
+        rgb_path = rgb_line.split('\t')[0]
+        depth_path = depth_line.split('\t')[0]
+        label = rgb_line.split('\t')[1].strip('\n')
+        if os.path.exists(rgb_path) and os.path.exists(depth_path):
+            rgb = cv2.imread(root_folder + rgb_path, 0)
+            labels.append(label)
+            # print(root_folder + rgb_path)
             i += 1
             print(i)
-            depth = cv2.imread(root_folder + line.split('\t')[0], 0)
+            depth = cv2.imread(root_folder + depth_path, 0)
             depth_de = fill_hole(depth)
-            depth_imgs.append(depth_de)
-    for i in range(len(rgb_imgs)):
-        merge_img = np.concatenate((rgb_imgs[i][:, :, None], depth_imgs[i][:, :, None]), axis=2)
-        imgs.append(merge_img)
+            merge_img = np.concatenate((rgb[:, :, None], depth_de[:, :, None]), axis=2)
+            imgs.append(merge_img)
     return imgs, labels
 
 
