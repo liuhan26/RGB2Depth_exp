@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="33efdb45-12a3-4096-a21e-0bdf25b5603e" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/LCNN/train/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LCNN/data_process/Img_2_hd5.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/data_process/Img_2_hd5.py" afterDir="false" />
+    <list default="true" id="33efdb45-12a3-4096-a21e-0bdf25b5603e" name="Default" comment="modify tfrecord file reading">
+      <change beforePath="$PROJECT_DIR$/.idea/RGB2Depth_exp.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/RGB2Depth_exp.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LCNN/data_process/depth_preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/data_process/depth_preprocess.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/LCNN29.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/LCNN29.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LCNN/train/LCNN29.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/train/LCNN29.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LCNN/train/hd5_reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/train/hd5_reader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LCNN/train/layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/train/layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LCNN/train/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/train/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LCNN/train/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/LCNN/train/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eaststation/eaststation.tfrecord" beforeDir="false" afterPath="$PROJECT_DIR$/eaststation/eaststation.tfrecord" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,31 +25,10 @@
       <file leaf-file-name="depth_preprocess.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/LCNN/data_process/depth_preprocess.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-418">
-              <caret line="6" column="20" selection-start-line="6" selection-start-column="20" selection-end-line="6" selection-end-column="20" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Img_2_hd5.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/LCNN/data_process/Img_2_hd5.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1005">
-              <caret line="67" selection-start-line="67" selection-end-line="67" />
+            <state relative-caret-position="240">
+              <caret line="38" column="22" lean-forward="true" selection-start-line="33" selection-end-line="38" selection-end-column="22" />
               <folding>
-                <element signature="e#0#16#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="hd5_reader.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/LCNN/train/hd5_reader.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1230">
-              <caret line="82" column="31" selection-start-line="82" selection-start-column="31" selection-end-line="82" selection-end-column="31" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
+                <element signature="e#0#18#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -55,8 +37,8 @@
       <file leaf-file-name="train.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/LCNN/train/train.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-104">
-              <caret line="54" column="23" lean-forward="true" selection-start-line="54" selection-start-column="23" selection-end-line="54" selection-end-column="23" />
+            <state relative-caret-position="192">
+              <caret line="105" column="24" lean-forward="true" selection-start-line="105" selection-start-column="24" selection-end-line="105" selection-end-column="24" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -65,19 +47,31 @@
         </entry>
       </file>
       <file leaf-file-name="LCNN29.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/LCNN/evaluation/feature_extraction/LCNN29.py">
+        <entry file="file://$PROJECT_DIR$/LCNN/train/LCNN29.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1170">
-              <caret line="78" column="15" selection-start-line="78" selection-start-column="15" selection-end-line="78" selection-end-column="15" />
+            <state relative-caret-position="87">
+              <caret line="88" column="15" lean-forward="true" selection-start-line="88" selection-start-column="15" selection-end-line="88" selection-end-column="15" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="hd5_reader.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/LCNN/train/hd5_reader.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="153">
+              <caret line="44" column="23" selection-start-line="44" selection-start-column="13" selection-end-line="44" selection-end-column="23" />
+              <folding>
+                <element signature="e#0#11#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="model.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/LCNN/evaluation/feature_extraction/model.py">
+        <entry file="file://$PROJECT_DIR$/LCNN/train/model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="12" column="21" selection-start-line="12" selection-start-column="21" selection-end-line="12" selection-end-column="21" />
+            <state relative-caret-position="1368">
+              <caret line="108" column="28" selection-start-line="108" selection-start-column="28" selection-end-line="108" selection-end-column="28" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -88,8 +82,8 @@
       <file leaf-file-name="layer.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/LCNN/train/layer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="20" column="46" selection-start-line="20" selection-start-column="46" selection-end-line="20" selection-end-column="46" />
+            <state relative-caret-position="570">
+              <caret line="38" column="61" selection-start-line="38" selection-start-column="61" selection-end-line="38" selection-end-column="61" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -107,24 +101,27 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/LCNN" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/depth_preprocess.py" />
         <option value="$PROJECT_DIR$/LCNN/data_process/Img_2_hd5.py" />
-        <option value="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/LCNN29.py" />
         <option value="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/model.py" />
         <option value="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/layer.py" />
-        <option value="$PROJECT_DIR$/LCNN/train/hd5_reader.py" />
+        <option value="$PROJECT_DIR$/LCNN/evaluation/feature_extraction/LCNN29.py" />
         <option value="$PROJECT_DIR$/LCNN/train/layer.py" />
+        <option value="$PROJECT_DIR$/LCNN/train/model.py" />
+        <option value="$PROJECT_DIR$/LCNN/train/LCNN29.py" />
+        <option value="$PROJECT_DIR$/LCNN/data_process/depth_preprocess.py" />
+        <option value="$PROJECT_DIR$/LCNN/train/hd5_reader.py" />
         <option value="$PROJECT_DIR$/LCNN/train/train.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="15" />
+    <option name="x" value="12" />
     <option name="y" value="23" />
     <option name="width" value="1277" />
     <option name="height" value="777" />
@@ -187,7 +184,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="File.Encoding" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -266,6 +263,28 @@
       <option name="presentableId" value="Default" />
       <updated>1544170024273</updated>
     </task>
+    <task id="LOCAL-00001" summary="modify tfrecord file reading">
+      <created>1544588620385</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1544588620385</updated>
+    </task>
+    <task id="LOCAL-00002" summary="modify tfrecord file reading">
+      <created>1544588688931</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1544588688931</updated>
+    </task>
+    <task id="LOCAL-00003" summary="modify tfrecord file reading">
+      <created>1544588700667</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1544588700667</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -280,7 +299,7 @@
       <window_info anchor="bottom" id="Python Console" weight="0.32876712" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39726028" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.1628615" />
       <window_info id="Favorites" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -294,20 +313,16 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/LCNN" />
+    </ignored-roots>
+    <MESSAGE value="modify tfrecord file reading" />
+    <option name="LAST_COMMIT_MESSAGE" value="modify tfrecord file reading" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/LCNN/data_process/depth_preprocess.py</url>
-          <line>29</line>
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/LCNN/train/train.py</url>
-          <line>78</line>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="9" />
+      <option name="time" value="14" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
@@ -341,16 +356,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/LCNN/train/layer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="20" column="46" selection-start-line="20" selection-start-column="46" selection-end-line="20" selection-end-column="46" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/LCNN/train/README.md">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -361,54 +366,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/LCNN/evaluation/feature_extraction/LCNN29.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1170">
-          <caret line="78" column="15" selection-start-line="78" selection-start-column="15" selection-end-line="78" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/LCNN/evaluation/accuracy/pair.label">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-34667">
           <caret line="16" column="58" lean-forward="true" selection-start-line="16" selection-start-column="58" selection-end-line="16" selection-end-column="58" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/LCNN/evaluation/feature_extraction/model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="12" column="21" selection-start-line="12" selection-start-column="21" selection-end-line="12" selection-end-column="21" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/LCNN/train/hd5_reader.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1230">
-          <caret line="82" column="31" selection-start-line="82" selection-start-column="31" selection-end-line="82" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/LCNN/data_process/Img_2_hd5.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1005">
-          <caret line="67" selection-start-line="67" selection-end-line="67" />
-          <folding>
-            <element signature="e#0#16#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/LCNN/data_process/depth_preprocess.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-418">
-          <caret line="6" column="20" selection-start-line="6" selection-start-column="20" selection-end-line="6" selection-end-column="20" />
         </state>
       </provider>
     </entry>
@@ -426,10 +387,84 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/data_process/Img_2_hd5.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1005">
+          <caret line="67" selection-start-line="67" selection-end-line="67" />
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/evaluation/feature_extraction/model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/evaluation/feature_extraction/LCNN29.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="107">
+          <caret line="59" lean-forward="true" selection-start-line="59" selection-end-line="59" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/data_process/depth_preprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="38" column="22" lean-forward="true" selection-start-line="33" selection-end-line="38" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/train/hd5_reader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="44" column="23" selection-start-line="44" selection-start-column="13" selection-end-line="44" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/train/model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1368">
+          <caret line="108" column="28" selection-start-line="108" selection-start-column="28" selection-end-line="108" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/train/layer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="570">
+          <caret line="38" column="61" selection-start-line="38" selection-start-column="61" selection-end-line="38" selection-end-column="61" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LCNN/train/LCNN29.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="87">
+          <caret line="88" column="15" lean-forward="true" selection-start-line="88" selection-start-column="15" selection-end-line="88" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/LCNN/train/train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-104">
-          <caret line="54" column="23" lean-forward="true" selection-start-line="54" selection-start-column="23" selection-end-line="54" selection-end-column="23" />
+        <state relative-caret-position="192">
+          <caret line="105" column="24" lean-forward="true" selection-start-line="105" selection-start-column="24" selection-end-line="105" selection-end-column="24" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>

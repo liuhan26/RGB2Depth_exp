@@ -3,13 +3,13 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import tensorflow as tf
 import model as M
-import numpy as np
 
-def LCNN29(image):
+
+def LCNN29(images):
     # with tf.name_scope('img_holder'):
     #     img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
 
-    mod = M.Model(image, [None, 128, 128, 2])
+    mod = M.Model(images, [None, 128, 128, 2])
 
     mod.conv_layer(5, 96, activation=1)
     mod.maxpooling_layer(2, 2)  # pool1

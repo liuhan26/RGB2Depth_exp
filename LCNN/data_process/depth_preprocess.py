@@ -1,7 +1,5 @@
 import numpy as np
 import cv2
-import sys
-import os
 from os import path as osp
 from glob import glob
 from PIL import Image

@@ -105,6 +105,11 @@ class Model():
 
         return self.res
 
+    def loss(self, label):
+        self.res = L.sparse_softmax_cross_entropy(self.res, label, 'loss')
+
+        return self.res
+
 
 def loadSess(model_path, sess):
     epoc = 0

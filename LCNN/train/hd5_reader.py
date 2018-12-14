@@ -1,5 +1,4 @@
 import h5py
-import cv2
 import random
 import numpy as np
 
