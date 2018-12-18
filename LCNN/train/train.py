@@ -14,6 +14,7 @@ parser.add_argument('--epoch', default='80', type=int, help='training epochs')
 parser.add_argument('--batch_size', default='128', type=int, help='min batch size')
 parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
 
+
 def fill_hole(depth_im):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
     depth_im_de = cv2.morphologyEx(depth_im, cv2.MORPH_OPEN, kernel)
@@ -101,6 +102,8 @@ def main():
         write_tfrecord(root_folder, rgb_file_txt, depth_file_txt, tfrecord_path)
     images, labels = input(args.batch_size, args.batch_size, tfrecord_path)
     loss, acc = LCNN29(images, labels)
+    l2_loss = tf.losses.get_regularization_loss()
+    loss += l2_loss
     global_step = tf.Variable(0, trainable=False)
     learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
                                                decay_steps=10*args.samples_num/args.batch_size,
@@ -117,9 +120,10 @@ def main():
                 step += 1
                 if (args.batch_size * step) % args.samples_num == 0:
                     epoch += 1
-                if step % 1000 == 0:
-                    print('epoch = %d  iter = %d learning_rate = %.2f  loss = %.2f' % (epoch, step, lr, loss_value))
-                if step % 20000 == 0:
+                #if step % 1000 == 0:
+                print('epoch = %d  iter = %d learning_rate = %.5f  loss = %.2f' % (epoch, step, lr, loss_value))
+                print('accuracy = %.2f' % acc)
+                if step % 100 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
                     save_path2 = save_path + '.meta'

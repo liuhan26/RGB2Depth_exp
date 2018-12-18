@@ -117,6 +117,7 @@ def loadSess(model_path, sess):
     if model_path != None:
         ckpt = tf.train.get_checkpoint_state(model_path)
         if ckpt:
+            sess.run(tf.local_variables_initializer())
             model = ckpt.model_checkpoint_path
             epoc = model.split('_')[1]
             iters = model.split('_')[-1].replace('.cpkt', '')
