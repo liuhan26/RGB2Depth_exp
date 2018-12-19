@@ -104,11 +104,12 @@ def main():
     loss, acc = LCNN29(images, labels)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
-    global_step = tf.Variable(0, trainable=False)
-    learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
-                                               decay_steps=10*args.samples_num/args.batch_size,
-                                               decay_rate=0.46)
-    train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
+    # global_step = tf.Variable(0, trainable=False)
+    # learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
+    #                                           decay_steps=10*args.samples_num/args.batch_size,
+    #                                           decay_rate=0.46)
+    # train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
+    train_op = tf.train.AdamOptimizer(0.0001).minimize(loss)
     with tf.Session() as sess:
         sess, epoch, step = M.loadSess('../tfmodel/', sess)
         saver = tf.train.Saver()
@@ -116,12 +117,12 @@ def main():
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
         try:
             while not coord.should_stop():
-                _, loss_value, lr = sess.run([train_op, loss, learning_rate])
+                _, loss_value = sess.run([train_op, loss])
                 step += 1
                 if (args.batch_size * step) % args.samples_num == 0:
                     epoch += 1
                 #if step % 1000 == 0:
-                print('epoch = %d  iter = %d learning_rate = %.5f  loss = %.2f' % (epoch, step, lr, loss_value))
+                print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
                 print('accuracy = %.2f' % acc)
                 if step % 100 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'

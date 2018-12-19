@@ -18,7 +18,7 @@ def LCNN29(images, labels):
     # with tf.name_scope('lab_holder'):
     #     lab_holder = tf.placeholder(tf.int64, [None, CLASS])
 
-    mod = M.Model(images, [None, 128, 128, 3])
+    mod = M.Model(images, [None, 128, 128, 2])
 
     mod.conv_layer(5, 96, activation=1)
     mod.maxpooling_layer(2, 2)  # pool1
