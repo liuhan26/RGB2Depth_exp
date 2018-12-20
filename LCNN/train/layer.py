@@ -36,7 +36,7 @@ def conv2D(x, kernel_size, outchn, name, stride=1, pad='SAME', usebias=True):
     # 	kernel = size
     # else:
     kernel = [kernel_size, kernel_size]
-    z = tf.layers.conv2d(x, outchn, kernel, kernel_regularizer=tf.contrib.layers.l2_regualarizer(scale=0.0001),
+    z = tf.layers.conv2d(x, outchn, kernel, kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=0.0001),
                          strides=(stride, stride), padding=pad,
                          kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
                          use_bias=usebias,

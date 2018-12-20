@@ -108,7 +108,7 @@ def main():
     # learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
     #                                           decay_steps=10*args.samples_num/args.batch_size,
     #                                           decay_rate=0.46)
-    train_op = tf.train.MomentumOptimizer(0.0001, 0.9).minimize(loss)
+    train_op = tf.train.MomentumOptimizer(0.0005, 0.9).minimize(loss)
     # train_op = tf.train.AdamOptimizer(0.0001).minimize(loss)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -119,12 +119,12 @@ def main():
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
         try:
             while not coord.should_stop():
-                _, loss_value = sess.run([train_op, loss])
+                _, loss_value, accuracy = sess.run([train_op, loss, acc])
                 step += 1
                 if (args.batch_size * step) % args.samples_num == 0:
                     epoch += 1
                 print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
-                print('accuracy = %.2f' % acc)
+                print('accuracy = %.2f' % accuracy)
                 if step % 100 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
