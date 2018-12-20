@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import os
-from LCNN29 import LCNN29
+from LCNN29 import LCNN29, LCNN9
 import model as M
 import argparse
 import shutil
@@ -84,7 +84,7 @@ def input(batch_size, epochs, tfrecord_path):
     filename_queue = tf.train.string_input_producer([tfrecord_path], num_epochs=epochs)
     image, label = read_tfrecord(filename_queue)
     images, labels = tf.train.shuffle_batch([image, label], batch_size, min_after_dequeue=1000,
-                                            capacity=1000 + 3 * batch_size, num_threads=3)
+                                            capacity=1000 + 3 * batch_size, num_threads=2)
     return images, labels
 
 
@@ -101,16 +101,18 @@ def main():
     if not os.path.exists(tfrecord_path):
         write_tfrecord(root_folder, rgb_file_txt, depth_file_txt, tfrecord_path)
     images, labels = input(args.batch_size, args.batch_size, tfrecord_path)
-    loss, acc = LCNN29(images, labels)
+    loss, acc = LCNN9(images, labels)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
     # global_step = tf.Variable(0, trainable=False)
     # learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
     #                                           decay_steps=10*args.samples_num/args.batch_size,
     #                                           decay_rate=0.46)
-    # train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
-    train_op = tf.train.AdamOptimizer(0.0001).minimize(loss)
-    with tf.Session() as sess:
+    train_op = tf.train.MomentumOptimizer(0.0001, 0.9).minimize(loss)
+    # train_op = tf.train.AdamOptimizer(0.0001).minimize(loss)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
         sess, epoch, step = M.loadSess('../tfmodel/', sess)
         saver = tf.train.Saver()
         coord = tf.train.Coordinator()
@@ -121,7 +123,6 @@ def main():
                 step += 1
                 if (args.batch_size * step) % args.samples_num == 0:
                     epoch += 1
-                #if step % 1000 == 0:
                 print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
                 print('accuracy = %.2f' % acc)
                 if step % 100 == 0:

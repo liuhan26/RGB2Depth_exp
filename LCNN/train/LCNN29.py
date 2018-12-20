@@ -12,6 +12,39 @@ CLASS = 2
 EPOC = 50
 
 
+def LCNN9(images, labels):
+    mod = M.Model(images, [None, 128, 128, 2])
+
+    mod.conv_layer(5, 96, activation=1)
+    mod.maxpooling_layer(2, 2)
+
+    mod.conv_layer(1, 96, activation=1)
+    mod.conv_layer(3, 192, activation=1)
+    mod.maxpooling_layer(2, 2)
+
+    mod.conv_layer(1, 192, activation=1)
+    mod.conv_layer(3, 384, activation=1)
+    mod.maxpooling_layer(2, 2)
+
+    mod.conv_layer(1, 384, activation=1)
+    mod.conv_layer(3, 256, activation=1)
+    mod.maxpooling_layer(2, 2)
+
+    mod.conv_layer(1, 256, activation=1)
+    mod.conv_layer(3, 256, activation=1)
+    mod.maxpooling_layer(2, 2)
+
+    mod.flatten()
+    mod.fcnn_layer(512)
+    mod.dropout(0.3)
+    mod.fcnn_layer(CLASS)
+    class_layer = mod.get_current_layer_res()
+    acc = mod.accuracy(labels)
+    loss = mod.loss(class_layer, labels)
+
+    return loss, acc
+
+
 def LCNN29(images, labels):
     # with tf.name_scope('img_holder'):
     #     img_holder = tf.placeholder(tf.float32, [None, 128, 128, 3])

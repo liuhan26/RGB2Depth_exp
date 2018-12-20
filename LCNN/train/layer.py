@@ -122,7 +122,7 @@ def accuracy(pred, y, name):
         # a = tf.cast(tf.argmax(pred,1),tf.int64)
         # b = tf.cast(tf.argmax(y, 1),tf.int64)
         # c = tf.argmax(pred,1)
-        correct = tf.equal(tf.cast(tf.argmax(pred, 1), tf.int64), tf.cast(y, tf.int64))
+        correct = tf.equal(tf.cast(tf.argmax(tf.nn.softmax(pred), 1), tf.int64), tf.cast(y, tf.int64))
         # correct = tf.equal(tf.cast(tf.argmax(pred,1),tf.int64),tf.cast(tf.argmax(y, 1),tf.int64))
         acc = tf.reduce_mean(tf.cast(correct, tf.float32))
         # #acc = tf.cast(correct,tf.float32)

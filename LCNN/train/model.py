@@ -105,8 +105,8 @@ class Model():
 
         return self.res
 
-    def loss(self, label):
-        self.res = L.sparse_softmax_cross_entropy(self.res, label, 'loss')
+    def loss(self, logits, label):
+        self.res = L.sparse_softmax_cross_entropy(logits, label, 'loss')
 
         return self.res
 
