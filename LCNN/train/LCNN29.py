@@ -12,8 +12,8 @@ CLASS = 2
 EPOC = 50
 
 
-def LCNN9(images, labels):
-    mod = M.Model(images, [None, 128, 128, 2])
+def LCNN9(img_holder, lab_holder):
+    mod = M.Model(img_holder, [None, 128, 128, 2])
 
     mod.conv_layer(5, 96, activation=1)
     mod.maxpooling_layer(2, 2)
@@ -37,10 +37,10 @@ def LCNN9(images, labels):
     mod.flatten()
     mod.fcnn_layer(512)
     mod.dropout(0.3)
-    mod.fcnn_layer(CLASS)
+    mod.fcnn_layer(lab_holder)
     class_layer = mod.get_current_layer_res()
-    acc = mod.accuracy(labels)
-    loss = mod.loss(class_layer, labels)
+    acc = mod.accuracy(lab_holder)
+    loss = mod.loss(class_layer, lab_holder)
 
     return loss, acc
 

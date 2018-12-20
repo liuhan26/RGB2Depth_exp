@@ -49,9 +49,8 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     return imgs, labels
 
 
-def write_tfrecord(root_folder, rgb_file_txt, depth_file_txt, tfrecord_path):
+def write_tfrecord(imgs, labels, tfrecord_path):
     writer = tf.python_io.TFRecordWriter(tfrecord_path)
-    imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     for image, label in zip(imgs, labels):
         label = int(label)
         example = tf.train.Example(features=tf.train.Features(
@@ -88,18 +87,11 @@ def input(batch_size, epochs, tfrecord_path):
     return images, labels
 
 
-def main():
+def tfreord_train(tfrecord_path):
     args = parser.parse_args()
     # rgb_file_txt = '/Volumes/Untitled/eaststation/test/test_3Dtexture.txt'
     # depth_file_txt = '/Volumes/Untitled/eaststation/test/test_3Ddepth.txt'
     # root_folder = '/Volumes/Untitled/eaststation/test/'
-    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
-    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
-    root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
-    tfrecord_path = '../../eaststation/eaststation.tfrecord'
-
-    if not os.path.exists(tfrecord_path):
-        write_tfrecord(root_folder, rgb_file_txt, depth_file_txt, tfrecord_path)
     images, labels = input(args.batch_size, args.batch_size, tfrecord_path)
     loss, acc = LCNN9(images, labels)
     l2_loss = tf.losses.get_regularization_loss()
@@ -143,6 +135,64 @@ def main():
         finally:
             coord.request_stop()
         coord.join(threads)
+
+
+def placeholder_train(imgs, labels):
+    args = parser.parse_args()
+    with tf.name_scope('img_holder'):
+        img_holder = tf.placeholder(tf.float32, [None, 128, 128, 3])
+    with tf.name_scope('lab_holder'):
+        lab_holder = tf.placeholder(tf.int64, [None, 1])
+    loss, acc = LCNN9(img_holder, lab_holder)
+    l2_loss = tf.losses.get_regularization_loss()
+    loss += l2_loss
+    train_op = tf.train.MomentumOptimizer(0.0005, 0.9).minimize(loss)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+        sess, epoch, step = M.loadSess('../tfmodel/', sess)
+        saver = tf.train.Saver()
+        for i in range(args.epoch):
+            for j in range(args.sample_num/args.batch_size+1):
+                images = imgs[j*args.batch_size:(j+1)*args.batch_size]
+                labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
+                _, loss_value, accuracy = sess.run([train_op, loss, acc],
+                                                   feed_dict={img_holder: images, lab_holder: labs})
+                step += 1
+                if (args.batch_size * step) % args.samples_num == 0:
+                    epoch += 1
+                print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
+                print('accuracy = %.2f' % accuracy)
+                if step % 100 == 0:
+                    save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
+                    saver.save(sess, save_path)
+                    save_path2 = save_path + '.meta'
+                    save_path3 = save_path + '.index'
+                    save_path4 = save_path + '.data-00000-of-00001'
+                    save_path5 = '../tfmodel/checkpoint'
+
+                    shutil.copy(save_path2, save_path2.replace('../tfmodel/', '../backup/'))
+                    shutil.copy(save_path3, save_path3.replace('../tfmodel/', '../backup/'))
+                    shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
+                    shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
+
+
+def main():
+    train_quick = 0
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
+    root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
+    imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+    if train_quick:
+        tfrecord_path = '../../eaststation/eaststation.tfrecord'
+
+        if not os.path.exists(tfrecord_path):
+            write_tfrecord(imgs, labels, tfrecord_path)
+        tfreord_train(tfrecord_path)
+
+    else:
+        placeholder_train(imgs, labels)
+
 
 
 if __name__ == "__main__":
