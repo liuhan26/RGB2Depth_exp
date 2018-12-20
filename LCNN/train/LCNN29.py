@@ -37,7 +37,7 @@ def LCNN9(img_holder, lab_holder):
     mod.flatten()
     mod.fcnn_layer(512)
     mod.dropout(0.3)
-    mod.fcnn_layer(lab_holder)
+    mod.fcnn_layer(CLASS)
     class_layer = mod.get_current_layer_res()
     acc = mod.accuracy(lab_holder)
     loss = mod.loss(class_layer, lab_holder)

@@ -11,7 +11,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
 parser.add_argument('--lr', default='0.01', type=float, help='learning rate')
 parser.add_argument('--epoch', default='80', type=int, help='training epochs')
-parser.add_argument('--batch_size', default='128', type=int, help='min batch size')
+parser.add_argument('--batch_size', default='1', type=int, help='min batch size')
 parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
 
 
@@ -32,9 +32,9 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     depth_lines = f2.readlines()
     i = 0
     for rgb_line, depth_line in zip(rgb_lines, depth_lines):
-        rgb_path = root_folder + rgb_line.split('\t')[0]
-        depth_path = root_folder + depth_line.split('\t')[0]
-        label = rgb_line.split('\t')[1].strip('\n')
+        rgb_path = root_folder + rgb_line.split(' ')[0]
+        depth_path = root_folder + depth_line.split(' ')[0]
+        label = rgb_line.split(' ')[1].strip('\n')
         if os.path.exists(rgb_path) and os.path.exists(depth_path):
             rgb = cv2.imread(rgb_path, 0)
             depth = cv2.imread(depth_path, 0)
@@ -52,7 +52,6 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
 def write_tfrecord(imgs, labels, tfrecord_path):
     writer = tf.python_io.TFRecordWriter(tfrecord_path)
     for image, label in zip(imgs, labels):
-        label = int(label)
         example = tf.train.Example(features=tf.train.Features(
             feature={
                 'image': tf.train.Feature(bytes_list=tf.train.BytesList(value=[image.tostring()])),
@@ -75,7 +74,7 @@ def read_tfrecord(filename_queue):
     label = features['label']
     image.set_shape([128 * 128 * 2])
     image = tf.reshape(image, [128, 128, 2])
-    image = tf.cast(image, tf.float32) // 255
+    image = tf.cast(image, tf.float32) / 255
     return image, label
 
 
@@ -140,9 +139,9 @@ def tfreord_train(tfrecord_path):
 def placeholder_train(imgs, labels):
     args = parser.parse_args()
     with tf.name_scope('img_holder'):
-        img_holder = tf.placeholder(tf.float32, [None, 128, 128, 3])
+        img_holder = tf.placeholder(tf.float32, [args.batch_size, 128, 128, 2])
     with tf.name_scope('lab_holder'):
-        lab_holder = tf.placeholder(tf.int64, [None, 1])
+        lab_holder = tf.placeholder(tf.int64, [args.batch_size])
     loss, acc = LCNN9(img_holder, lab_holder)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
@@ -153,7 +152,7 @@ def placeholder_train(imgs, labels):
         sess, epoch, step = M.loadSess('../tfmodel/', sess)
         saver = tf.train.Saver()
         for i in range(args.epoch):
-            for j in range(args.sample_num/args.batch_size+1):
+            for j in range(args.samples_num//args.batch_size+1):
                 images = imgs[j*args.batch_size:(j+1)*args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
                 _, loss_value, accuracy = sess.run([train_op, loss, acc],
@@ -178,10 +177,13 @@ def placeholder_train(imgs, labels):
 
 
 def main():
-    train_quick = 0
+    train_quick = 1
     rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
+    # rgb_file_txt = '../../eaststation/train_3Dtexture.txt'
+    # depth_file_txt = '../../eaststation/train_3Ddepth.txt'
+    # root_folder = '../../eaststation/'
     imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     if train_quick:
         tfrecord_path = '../../eaststation/eaststation.tfrecord'
@@ -192,7 +194,6 @@ def main():
 
     else:
         placeholder_train(imgs, labels)
-
 
 
 if __name__ == "__main__":
