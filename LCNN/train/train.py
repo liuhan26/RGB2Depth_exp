@@ -6,6 +6,7 @@ from LCNN29 import LCNN29, LCNN9
 import model as M
 import argparse
 import shutil
+
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
@@ -32,18 +33,17 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     depth_lines = f2.readlines()
     i = 0
     for rgb_line, depth_line in zip(rgb_lines, depth_lines):
-        rgb_path = root_folder + rgb_line.split(' ')[0]
+        rgb_path = root_folder + rgb_line.split('\t')[0]
         depth_path = root_folder + depth_line.split('\t')[0]
-        label = rgb_line.split(' ')[1].strip('\n')
+        label = rgb_line.split('t')[1].strip('\n')
         if os.path.exists(rgb_path) and os.path.exists(depth_path):
             rgb = cv2.imread(rgb_path, 0)
             depth = cv2.imread(depth_path, 0)
             if rgb is not None and depth is not None:
                 label = int(label)
                 labels.append(label)
-                # print(depth_path)
                 i += 1
-                print(i)
+                # print(i)
                 depth_de = fill_hole(depth)
                 merge_img = np.concatenate((rgb[:, :, None], depth_de[:, :, None]), axis=2)
                 merge_img = merge_img / 255
@@ -76,7 +76,7 @@ def read_tfrecord(filename_queue):
     label = features['label']
     image.set_shape([128 * 128 * 2])
     image = tf.reshape(image, [128, 128, 2])
-    #image = tf.cast(image, tf.float32) / 255
+    # image = tf.cast(image, tf.float32) / 255
     return image, label
 
 
@@ -97,10 +97,6 @@ def tfreord_train(tfrecord_path):
     loss, acc = LCNN29(images, labels)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
-    # global_step = tf.Variable(0, trainable=False)
-    # learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
-    #                                           decay_steps=10*args.samples_num/args.batch_size,
-    #                                           decay_rate=0.46)
     train_op = tf.train.MomentumOptimizer(0.00001, 0.9).minimize(loss)
     # train_op = tf.train.AdamOptimizer(0.0001).minimize(loss)
     config = tf.ConfigProto()
@@ -148,15 +144,19 @@ def placeholder_train(imgs, labels):
     loss, acc = LCNN9(img_holder, lab_holder)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
-    train_op = tf.train.MomentumOptimizer(0.0005, 0.9).minimize(loss)
+    global_step = tf.Variable(0, trainable=False)
+    learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
+                                               decay_steps=10 * args.samples_num / args.batch_size,
+                                               decay_rate=0.46, staircase=True)
+    train_op = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss, global_step)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
         sess, epoch, step = M.loadSess('../tfmodel/', sess)
         saver = tf.train.Saver()
         for i in range(args.epoch):
-            for j in range(args.samples_num//args.batch_size+1):
-                images = imgs[j*args.batch_size:(j+1)*args.batch_size]
+            for j in range(args.samples_num // args.batch_size + 1):
+                images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
                 _, loss_value, accuracy = sess.run([train_op, loss, acc],
                                                    feed_dict={img_holder: images, lab_holder: labs})
@@ -165,7 +165,7 @@ def placeholder_train(imgs, labels):
                     epoch += 1
                 print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
                 print('accuracy = %.2f' % accuracy)
-                if step % 100 == 0:
+                if step % 500 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
                     save_path2 = save_path + '.meta'
@@ -177,17 +177,21 @@ def placeholder_train(imgs, labels):
                     shutil.copy(save_path3, save_path3.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
+                    test()
 
 
 def test():
     with tf.name_scope("test_images"):
         images = tf.placeholder(tf.float32, shape=[None, 128, 128, 2])
     with tf.name_scope("test_labels"):
-        labels = tf.placeholder(tf.int64, shape=[None,])
-    rgb_folder = '/home/wtx/RGBD_dataset/eaststation/'
-    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
-    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
-    imgs, labs = concat_rgb_and_depth(rgb_folder, rgb_file_txt, depth_file_txt)
+        labels = tf.placeholder(tf.int64, shape=[None])
+    # rgb_folder = '/home/wtx/RGBD_dataset/eaststation/'
+    # rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
+    # depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Dtexture.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth.txt'
+    root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
+    imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     _, acc = LCNN9(images, labels)
     accuracy = 0
     config = tf.ConfigProto()
@@ -195,7 +199,7 @@ def test():
     with tf.Session(config=config) as sess:
         M.loadSess('../tfmodel/', sess)
         for i in range(len(labs)):
-            accuracy +=sum(sess.run([acc], feed_dict={images: imgs[i][None,:,:,:], labels: [labs[i]]}))
+            accuracy += sum(sess.run([acc], feed_dict={images: imgs[i][None, :, :, :], labels: [labs[i]]}))
         accuracy = accuracy / len(labs)
         print("The accuracy in Test Set: " + str(accuracy))
 
@@ -208,17 +212,16 @@ def main():
     # rgb_file_txt = '../../eaststation/train_3Dtexture.txt'
     # depth_file_txt = '../../eaststation/train_3Ddepth.txt'
     # root_folder = '../../eaststation/'
-    # imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+    imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     if train_quick:
         tfrecord_path = '../../eaststation/eaststation.tfrecord'
-
         if not os.path.exists(tfrecord_path):
             write_tfrecord(imgs, labels, tfrecord_path)
         tfreord_train(tfrecord_path)
 
     else:
-        # placeholder_train(imgs, labels)
-        test()
+        placeholder_train(imgs, labels)
+        # test()
 
 
 if __name__ == "__main__":
