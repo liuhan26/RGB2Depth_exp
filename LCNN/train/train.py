@@ -141,6 +141,7 @@ def placeholder_train(imgs, labels):
         img_holder = tf.placeholder(tf.float32, [args.batch_size, 128, 128, 2])
     with tf.name_scope('lab_holder'):
         lab_holder = tf.placeholder(tf.int64, [args.batch_size])
+    test_imgs, test_labs = test()
     loss, acc = LCNN9(img_holder, lab_holder)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
@@ -163,13 +164,7 @@ def placeholder_train(imgs, labels):
                 step += 1
                 print('epoch = %d  iter = %d lr = %.6f loss = %.2f' % (epoch, step, lr, loss_value))
                 print('accuracy = %.2f' % accuracy)
-                test_imgs, test_labs = test()
-                test_acc = 0
-                for it in range(len(test_labs) // args.batch_size):
-                    test_acc += sum(sess.run([acc], feed_dict={img_holder: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
-                                                               lab_holder: test_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
-                test_acc = test_acc / len(test_labs)
-                print('The Accuracy in Test Set:' + str(test_acc))
+
                 if step % 500 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
@@ -182,7 +177,13 @@ def placeholder_train(imgs, labels):
                     shutil.copy(save_path3, save_path3.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
-                    # test(sess)
+                    test_acc = 0
+                    for it in range(len(test_labs) // args.batch_size):
+                        test_acc += sum(sess.run([acc], feed_dict={
+                            img_holder: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
+                            lab_holder: test_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
+                    test_acc = test_acc / len(test_labs)
+                    print('The Accuracy in Test Set:' + str(test_acc))
             epoch += 1
 
 
