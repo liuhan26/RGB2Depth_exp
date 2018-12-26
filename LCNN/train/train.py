@@ -166,8 +166,8 @@ def placeholder_train(imgs, labels):
                 test_imgs, test_labs = test()
                 test_acc = 0
                 for it in range(len(test_labs) // args.batch_size):
-                    test_acc += sum(sess.run([acc], feed_dict={images: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
-                                                               labels: [test_labs[it * args.batch_size:(it + 1) * args.batch_size]]}))
+                    test_acc += sum(sess.run([acc], feed_dict={img_holder: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
+                                                               lab_holder: test_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
                 test_acc = test_acc / len(test_labs)
                 print('The Accuracy in Test Set:' + str(test_acc))
                 if step % 500 == 0:
