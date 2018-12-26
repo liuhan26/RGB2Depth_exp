@@ -159,11 +159,16 @@ def placeholder_train(imgs, labels):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
                 _, lr, loss_value, accuracy = sess.run([train_op, learning_rate, loss, acc],
-                                                   feed_dict={img_holder: images, lab_holder: labs})
+                                                       feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
                 print('epoch = %d  iter = %d lr = %.6f loss = %.2f' % (epoch, step, lr, loss_value))
                 print('accuracy = %.2f' % accuracy)
-                test(sess)
+                test_imgs, test_labs = test()
+                for it in range(len(test_labs)):
+                    test_acc += sum(sess.run([acc], feed_dict={images: test_imgs[i][None, :, :, :],
+                                                               labels: [test_labs[i]]}))
+                test_acc = test_acc / len(test_labs)
+                print('The Accuracy in Test Set:' + str(test_acc))
                 if step % 500 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
@@ -177,14 +182,14 @@ def placeholder_train(imgs, labels):
                     shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
                     # test(sess)
-            epoch += 1  
+            epoch += 1
 
 
-def test(sess):
-    with tf.name_scope("test_images"):
-        images = tf.placeholder(tf.float32, shape=[None, 128, 128, 2])
-    with tf.name_scope("test_labels"):
-        labels = tf.placeholder(tf.int64, shape=[None])
+def test():
+    # with tf.name_scope("test_images"):
+    #     images = tf.placeholder(tf.float32, shape=[None, 128, 128, 2])
+    # with tf.name_scope("test_labels"):
+    #     labels = tf.placeholder(tf.int64, shape=[None])
     # rgb_folder = '/home/wtx/RGBD_dataset/eaststation/'
     # rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
     # depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
@@ -193,15 +198,16 @@ def test(sess):
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     # _, acc = LCNN9(images, labels)
-    accuracy = 0
+    # accuracy = 0
     # config = tf.ConfigProto()
     # config.gpu_options.allow_growth = True
     # with tf.Session(config=config) as sess:
-        # M.loadSess('../tfmodel/', sess)
-    for i in range(len(labs)):
-            accuracy += sum(sess.run([acc], feed_dict={images: imgs[i][None, :, :, :], labels: [labs[i]]}))
-    accuracy = accuracy / len(labs)
-    print("The accuracy in Test Set: " + str(accuracy))
+    # M.loadSess('../tfmodel/', sess)
+    # for i in range(len(labs)):
+    #         accuracy += sum(sess.run([acc], feed_dict={images: imgs[i][None, :, :, :], labels: [labs[i]]}))
+    # accuracy = accuracy / len(labs)
+    # print("The accuracy in Test Set: " + str(accuracy))
+    return imgs, labs
 
 
 def main():
