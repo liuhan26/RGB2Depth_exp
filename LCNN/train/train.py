@@ -11,7 +11,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
 parser.add_argument('--lr', default='0.01', type=float, help='learning rate')
 parser.add_argument('--epoch', default='80', type=int, help='training epochs')
-parser.add_argument('--batch_size', default='1', type=int, help='min batch size')
+parser.add_argument('--batch_size', default='64', type=int, help='min batch size')
 parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
 
 
@@ -32,13 +32,14 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     depth_lines = f2.readlines()
     i = 0
     for rgb_line, depth_line in zip(rgb_lines, depth_lines):
-        rgb_path = root_folder + rgb_line.split(' ')[0]
-        depth_path = root_folder + depth_line.split(' ')[0]
-        label = rgb_line.split(' ')[1].strip('\n')
+        rgb_path = root_folder + rgb_line.split('\t')[0]
+        depth_path = root_folder + depth_line.split('\t')[0]
+        label = rgb_line.split('\t')[1].strip('\n')
         if os.path.exists(rgb_path) and os.path.exists(depth_path):
             rgb = cv2.imread(rgb_path, 0)
             depth = cv2.imread(depth_path, 0)
             if rgb is not None and depth is not None:
+                label = int(label)
                 labels.append(label)
                 # print(depth_path)
                 i += 1
@@ -92,19 +93,19 @@ def tfreord_train(tfrecord_path):
     # depth_file_txt = '/Volumes/Untitled/eaststation/test/test_3Ddepth.txt'
     # root_folder = '/Volumes/Untitled/eaststation/test/'
     images, labels = input(args.batch_size, args.batch_size, tfrecord_path)
-    loss, acc = LCNN9(images, labels)
+    loss, acc = LCNN29(images, labels)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
     # global_step = tf.Variable(0, trainable=False)
     # learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
     #                                           decay_steps=10*args.samples_num/args.batch_size,
     #                                           decay_rate=0.46)
-    train_op = tf.train.MomentumOptimizer(0.0005, 0.9).minimize(loss)
+    train_op = tf.train.MomentumOptimizer(0.00001, 0.9).minimize(loss)
     # train_op = tf.train.AdamOptimizer(0.0001).minimize(loss)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
-        sess, epoch, step = M.loadSess('../tfmodel/', sess)
+        sess, epoch, step = M.loadSess('../tfmodel_LCNN29/', sess)
         saver = tf.train.Saver()
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
@@ -114,20 +115,21 @@ def tfreord_train(tfrecord_path):
                 step += 1
                 if (args.batch_size * step) % args.samples_num == 0:
                     epoch += 1
-                print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
-                print('accuracy = %.2f' % accuracy)
-                if step % 100 == 0:
-                    save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
+                if step % 1 == 0:
+                    print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
+                    print('accuracy = %.2f' % accuracy)
+                if step % 200 == 0:
+                    save_path = '../tfmodel_LCNN29/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
                     save_path2 = save_path + '.meta'
                     save_path3 = save_path + '.index'
                     save_path4 = save_path + '.data-00000-of-00001'
-                    save_path5 = '../tfmodel/checkpoint'
+                    save_path5 = '../tfmodel_LCNN29/checkpoint'
 
-                    shutil.copy(save_path2, save_path2.replace('../tfmodel/', '../backup/'))
-                    shutil.copy(save_path3, save_path3.replace('../tfmodel/', '../backup/'))
-                    shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
-                    shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
+                    shutil.copy(save_path2, save_path2.replace('../tfmodel_LCNN29/', '../backup_LCNN29/'))
+                    shutil.copy(save_path3, save_path3.replace('../tfmodel_LCNN29/', '../backup_LCNN29/'))
+                    shutil.copy(save_path4, save_path4.replace('../tfmodel_LCNN29/', '../backup_LCNN29/'))
+                    shutil.copy(save_path5, save_path5.replace('../tfmodel_LCNN29/', '../backup_LCNN29/'))
 
         except tf.errors.OutOfRangeError:
             print('Done training for %d steps' % (step))
@@ -184,7 +186,7 @@ def main():
     # rgb_file_txt = '../../eaststation/train_3Dtexture.txt'
     # depth_file_txt = '../../eaststation/train_3Ddepth.txt'
     # root_folder = '../../eaststation/'
-    imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+    # imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     if train_quick:
         tfrecord_path = '../../eaststation/eaststation.tfrecord'
 
