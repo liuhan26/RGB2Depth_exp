@@ -178,6 +178,27 @@ def placeholder_train(imgs, labels):
                     shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
 
 
+def test():
+    with tf.name_scope("test_images"):
+        images = tf.placeholder(tf.float32, shape=[None, 128, 128, 2])
+    with tf.name_scope("test_labels"):
+        labels = tf.placeholder(tf.int32, shape=[None, 1])
+    rgb_folder = ''
+    rgb_file_txt = ''
+    depth_file_txt = ''
+    imgs, labs = concat_rgb_and_depth(rgb_folder, rgb_file_txt, depth_file_txt)
+    _, acc = LCNN9(images, labels)
+    accuracy = 0
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+        M.loadSess('../tfmodel/')
+        for i in range(len(labs)):
+            accuracy += sess.run([acc], feed_dict={images: imgs[i], labels: labs[i]})
+        accuracy = tf.reduce_mean(tf.cast(accuracy, tf.float32))
+        print("The accuracy in Test Set: " + str(accuracy))
+
+
 def main():
     train_quick = 1
     rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
