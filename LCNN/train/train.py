@@ -165,8 +165,8 @@ def placeholder_train(imgs, labels):
                 print('accuracy = %.2f' % accuracy)
                 test_imgs, test_labs = test()
                 for it in range(len(test_labs)):
-                    test_acc += sum(sess.run([acc], feed_dict={images: test_imgs[i][None, :, :, :],
-                                                               labels: [test_labs[i]]}))
+                    test_acc += sum(sess.run([acc], feed_dict={images: test_imgs[it][None, :, :, :],
+                                                               labels: [test_labs[it]]}))
                 test_acc = test_acc / len(test_labs)
                 print('The Accuracy in Test Set:' + str(test_acc))
                 if step % 500 == 0:
