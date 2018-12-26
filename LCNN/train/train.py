@@ -10,7 +10,7 @@ import shutil
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
-parser.add_argument('--lr', default='0.01', type=float, help='learning rate')
+parser.add_argument('--lr', default='0.0006', type=float, help='learning rate')
 parser.add_argument('--epoch', default='80', type=int, help='training epochs')
 parser.add_argument('--batch_size', default='64', type=int, help='min batch size')
 parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
@@ -35,7 +35,7 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     for rgb_line, depth_line in zip(rgb_lines, depth_lines):
         rgb_path = root_folder + rgb_line.split('\t')[0]
         depth_path = root_folder + depth_line.split('\t')[0]
-        label = rgb_line.split('t')[1].strip('\n')
+        label = rgb_line.split('\t')[1].strip('\n')
         if os.path.exists(rgb_path) and os.path.exists(depth_path):
             rgb = cv2.imread(rgb_path, 0)
             depth = cv2.imread(depth_path, 0)
@@ -155,16 +155,15 @@ def placeholder_train(imgs, labels):
         sess, epoch, step = M.loadSess('../tfmodel/', sess)
         saver = tf.train.Saver()
         for i in range(args.epoch):
-            for j in range(args.samples_num // args.batch_size + 1):
+            for j in range(args.samples_num // args.batch_size):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
-                _, loss_value, accuracy = sess.run([train_op, loss, acc],
+                _, lr, loss_value, accuracy = sess.run([train_op, learning_rate, loss, acc],
                                                    feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
-                if (args.batch_size * step) % args.samples_num == 0:
-                    epoch += 1
-                print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
+                print('epoch = %d  iter = %d lr = %.6f loss = %.2f' % (epoch, step, lr, loss_value))
                 print('accuracy = %.2f' % accuracy)
+                test(sess)
                 if step % 500 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
@@ -177,10 +176,11 @@ def placeholder_train(imgs, labels):
                     shutil.copy(save_path3, save_path3.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
-                    test()
+                    # test(sess)
+            epoch += 1  
 
 
-def test():
+def test(sess):
     with tf.name_scope("test_images"):
         images = tf.placeholder(tf.float32, shape=[None, 128, 128, 2])
     with tf.name_scope("test_labels"):
@@ -192,16 +192,16 @@ def test():
     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
-    _, acc = LCNN9(images, labels)
+    # _, acc = LCNN9(images, labels)
     accuracy = 0
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    with tf.Session(config=config) as sess:
-        M.loadSess('../tfmodel/', sess)
-        for i in range(len(labs)):
+    # config = tf.ConfigProto()
+    # config.gpu_options.allow_growth = True
+    # with tf.Session(config=config) as sess:
+        # M.loadSess('../tfmodel/', sess)
+    for i in range(len(labs)):
             accuracy += sum(sess.run([acc], feed_dict={images: imgs[i][None, :, :, :], labels: [labs[i]]}))
-        accuracy = accuracy / len(labs)
-        print("The accuracy in Test Set: " + str(accuracy))
+    accuracy = accuracy / len(labs)
+    print("The accuracy in Test Set: " + str(accuracy))
 
 
 def main():
