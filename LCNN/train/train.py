@@ -32,9 +32,9 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     depth_lines = f2.readlines()
     i = 0
     for rgb_line, depth_line in zip(rgb_lines, depth_lines):
-        rgb_path = root_folder + rgb_line.split('\t')[0]
+        rgb_path = root_folder + rgb_line.split(' ')[0]
         depth_path = root_folder + depth_line.split('\t')[0]
-        label = rgb_line.split('\t')[1].strip('\n')
+        label = rgb_line.split(' ')[1].strip('\n')
         if os.path.exists(rgb_path) and os.path.exists(depth_path):
             rgb = cv2.imread(rgb_path, 0)
             depth = cv2.imread(depth_path, 0)
@@ -46,6 +46,7 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
                 print(i)
                 depth_de = fill_hole(depth)
                 merge_img = np.concatenate((rgb[:, :, None], depth_de[:, :, None]), axis=2)
+                merge_img = merge_img / 255
                 imgs.append(merge_img)
     return imgs, labels
 
@@ -75,7 +76,7 @@ def read_tfrecord(filename_queue):
     label = features['label']
     image.set_shape([128 * 128 * 2])
     image = tf.reshape(image, [128, 128, 2])
-    image = tf.cast(image, tf.float32) / 255
+    #image = tf.cast(image, tf.float32) / 255
     return image, label
 
 
@@ -182,25 +183,25 @@ def test():
     with tf.name_scope("test_images"):
         images = tf.placeholder(tf.float32, shape=[None, 128, 128, 2])
     with tf.name_scope("test_labels"):
-        labels = tf.placeholder(tf.int32, shape=[None, 1])
-    rgb_folder = ''
-    rgb_file_txt = ''
-    depth_file_txt = ''
+        labels = tf.placeholder(tf.int64, shape=[None,])
+    rgb_folder = '/home/wtx/RGBD_dataset/eaststation/'
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
     imgs, labs = concat_rgb_and_depth(rgb_folder, rgb_file_txt, depth_file_txt)
     _, acc = LCNN9(images, labels)
     accuracy = 0
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
-        M.loadSess('../tfmodel/')
+        M.loadSess('../tfmodel/', sess)
         for i in range(len(labs)):
-            accuracy += sess.run([acc], feed_dict={images: imgs[i], labels: labs[i]})
-        accuracy = tf.reduce_mean(tf.cast(accuracy, tf.float32))
+            accuracy +=sum(sess.run([acc], feed_dict={images: imgs[i][None,:,:,:], labels: [labs[i]]}))
+        accuracy = accuracy / len(labs)
         print("The accuracy in Test Set: " + str(accuracy))
 
 
 def main():
-    train_quick = 1
+    train_quick = 0
     rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
@@ -216,7 +217,8 @@ def main():
         tfreord_train(tfrecord_path)
 
     else:
-        placeholder_train(imgs, labels)
+        # placeholder_train(imgs, labels)
+        test()
 
 
 if __name__ == "__main__":
