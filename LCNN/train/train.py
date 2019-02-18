@@ -10,7 +10,7 @@ import shutil
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
-parser.add_argument('--lr', default='0.0006', type=float, help='learning rate')
+parser.add_argument('--lr', default='0.001', type=float, help='learning rate')
 parser.add_argument('--epoch', default='80', type=int, help='training epochs')
 parser.add_argument('--batch_size', default='64', type=int, help='min batch size')
 parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
@@ -146,10 +146,10 @@ def placeholder_train(imgs, labels):
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
     global_step = tf.Variable(0, trainable=False)
-    learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
-                                               decay_steps=10 * args.samples_num / args.batch_size,
-                                               decay_rate=0.46, staircase=True)
-    train_op = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss, global_step)
+    #learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
+    #                                           decay_steps=10 * args.samples_num / args.batch_size,
+    #                                           decay_rate=0.46, staircase=True)
+    train_op = tf.train.MomentumOptimizer(0.00001, 0.9).minimize(loss, global_step)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
@@ -159,13 +159,13 @@ def placeholder_train(imgs, labels):
             for j in range(args.samples_num // args.batch_size):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
-                _, lr, loss_value, accuracy = sess.run([train_op, learning_rate, loss, acc],
+                _,  loss_value, accuracy = sess.run([train_op,loss, acc],
                                                        feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
-                print('epoch = %d  iter = %d lr = %.6f loss = %.2f' % (epoch, step, lr, loss_value))
+                print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
                 print('accuracy = %.2f' % accuracy)
 
-                if step % 500 == 0:
+                if step % 2000 == 0:
                     save_path = '../tfmodel/Epoc_' + str(epoch) + '_' + 'Iter_' + str(step) + '.cpkt'
                     saver.save(sess, save_path)
                     save_path2 = save_path + '.meta'
@@ -182,7 +182,7 @@ def placeholder_train(imgs, labels):
                         test_acc += sum(sess.run([acc], feed_dict={
                             img_holder: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
                             lab_holder: test_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
-                    test_acc = test_acc / len(test_labs)
+                    test_acc = test_acc / (len(test_labs) // args.batch_size)
                     print('The Accuracy in Test Set:' + str(test_acc))
             epoch += 1
 
