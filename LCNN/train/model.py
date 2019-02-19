@@ -119,7 +119,7 @@ def loadSess(model_path, sess):
         if ckpt:
             sess.run(tf.local_variables_initializer())
             model = ckpt.model_checkpoint_path
-            epoc = model.split('_')[2]
+            epoc = model.split('_')[1]
             iters = model.split('_')[-1].replace('.cpkt', '')
             print('loading from model:', model)
 
