@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('..')
 import tensorflow as tf
 import numpy as np
@@ -14,7 +15,7 @@ import shutil
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 parser = argparse.ArgumentParser(description='TensorFlow LightCNN29 training')
-parser.add_argument('--lr', default='0.001', type=float, help='learning rate')
+parser.add_argument('--lr', default='0.0008', type=float, help='learning rate')
 parser.add_argument('--epoch', default='80', type=int, help='training epochs')
 parser.add_argument('--batch_size', default='64', type=int, help='min batch size')
 parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
@@ -136,15 +137,17 @@ def placeholder_train(imgs, labels):
         img_holder = tf.placeholder(tf.float32, [args.batch_size, 128, 128, 2])
     with tf.name_scope('lab_holder'):
         lab_holder = tf.placeholder(tf.int64, [args.batch_size])
-    test_imgs, test_labs = test_list()
+    val_imgs, val_labs = test_list()
     loss, acc = LCNN9(img_holder, lab_holder)
     l2_loss = tf.losses.get_regularization_loss()
+    print('l2_loss: ' + l2_loss)
     loss += l2_loss
     global_step = tf.Variable(0, trainable=False)
-    # learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
-    #                                           decay_steps=10 * args.samples_num / args.batch_size,
-    #                                           decay_rate=0.46, staircase=True)
-    train_op = tf.train.MomentumOptimizer(0.00001, 0.9).minimize(loss, global_step)
+    learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
+                                               decay_steps=10 * args.samples_num / args.batch_size,
+                                               # decay_steps = 5000
+                                               decay_rate=0.46, staircase=True)
+    train_op = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss, global_step)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
@@ -154,10 +157,10 @@ def placeholder_train(imgs, labels):
             for j in range(args.samples_num // args.batch_size):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
-                _, loss_value, accuracy = sess.run([train_op, loss, acc],
-                                                   feed_dict={img_holder: images, lab_holder: labs})
+                _, loss_value, lr, accuracy = sess.run([train_op, loss, learning_rate, acc],
+                                                       feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
-                print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
+                print('epoch = %d  iter = %d lr = %.6f loss = %.2f' % (epoch, step, lr, loss_value))
                 print('accuracy = %.2f' % accuracy)
 
                 if step % 2000 == 0:
@@ -173,22 +176,22 @@ def placeholder_train(imgs, labels):
                     shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
                     val_acc = 0
-                    for it in range(len(test_labs) // args.batch_size):
+                    for it in range(len(val_labs) // args.batch_size):
                         val_acc += sum(sess.run([acc], feed_dict={
-                            img_holder: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
-                            lab_holder: test_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
-                    val_acc = val_acc / (len(test_labs) // args.batch_size)
+                            img_holder: val_imgs[it * args.batch_size:(it + 1) * args.batch_size],
+                            lab_holder: val_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
+                    val_acc = val_acc / (len(val_labs) // args.batch_size)
                     print('The Accuracy in Val Set:' + str(val_acc))
                     test_acc = 0
                     rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
                     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
                     root_folder = '/home/wtx/RGBD_dataset/eaststation/'
-                    imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
-                    for iter in range(len(labs) // args.batch_size):
+                    test_imgs, test_labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+                    for iter in range(len(test_labs) // args.batch_size):
                         test_acc += sum(sess.run([acc], feed_dict={
-                            img_holder: imgs[iter * args.batch_size:(iter + 1) * args.batch_size],
-                            lab_holder: labs[iter * args.batch_size:(iter + 1) * args.batch_size]}))
-                    ave_acc = test_acc / (len(labs) // args.batch_size)
+                            img_holder: test_imgs[iter * args.batch_size:(iter + 1) * args.batch_size],
+                            lab_holder: test_labs[iter * args.batch_size:(iter + 1) * args.batch_size]}))
+                    ave_acc = test_acc / (len(test_labs) // args.batch_size)
                     print('The Accuracy in Test Set:' + str(ave_acc))
             epoch += 1
 
