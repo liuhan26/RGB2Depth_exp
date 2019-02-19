@@ -183,7 +183,8 @@ def placeholder_train(imgs, labels):
                             img_holder: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
                             lab_holder: test_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
                     test_acc = test_acc / (len(test_labs) // args.batch_size)
-                    print('The Accuracy in Test Set:' + str(test_acc))
+                    print('The Accuracy in Val Set:' + str(test_acc))
+                    test()
             epoch += 1
 
 
@@ -202,19 +203,18 @@ def test():
     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
-    img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
-    lab_holder = tf.placeholder(tf.int64, [None])
-    _, acc = LCNN9(img_holder, lab_holder)
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    sess = tf.Session(config=config)
-    M.loadSess('../tfmodel/', sess)
+    # img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
+    # lab_holder = tf.placeholder(tf.int64, [None])
+    # _, acc = LCNN9(img_holder, lab_holder)
+    # config = tf.ConfigProto()
+    # config.gpu_options.allow_growth = True
+    # sess = tf.Session(config=config)
+    # M.loadSess('../tfmodel/', sess)
     for iter in range(len(labs)//args.batch_size):
         test_acc += sum(sess.run([acc], feed_dict={
             img_holder: imgs[iter * args.batch_size:(iter+1) * args.batch_size],
             lab_holder: labs[iter * args.batch_size:(iter+1) * args.batch_size]}))
-    sess.close()
-    print('  '+str(len(imgs))+'  '+str(args.batch_size))
+    # sess.close()
     ave_acc = test_acc / (len(labs)//args.batch_size)
     print('The Accuracy in Test Set:' + str(ave_acc))
 
