@@ -198,9 +198,9 @@ def test_list():
 def test():
     args = parser.parse_args()
     test_acc = 0
-    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
-    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
-    root_folder = '/home/wtx/RGBD_dataset/eaststation/'
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Dtexture.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth.txt'
+    root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
     lab_holder = tf.placeholder(tf.int64, [None])
@@ -208,14 +208,15 @@ def test():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
-    M.loadSess('../tfmodel/Epoc_193_Iter_108000.cpkt', sess)
+    M.loadSess('../tfmodel/', sess)
     for iter in range(len(labs)//args.batch_size):
-        test_acc += sess.run([acc], feed_dict={
+        test_acc += sum(sess.run([acc], feed_dict={
             img_holder: imgs[iter * args.batch_size:(iter+1) * args.batch_size],
-            lab_holder: labs[iter * args.batch_size:(iter+1) * args.batch_size]})
+            lab_holder: labs[iter * args.batch_size:(iter+1) * args.batch_size]}))
     sess.close()
+    print('  '+str(len(imgs))+'  '+str(args.batch_size))
     ave_acc = test_acc / (len(labs)//args.batch_size)
-    print('The Accuracy in Test Set:' + ave_acc)
+    print('The Accuracy in Test Set:' + str(ave_acc))
 
 
 def main():
