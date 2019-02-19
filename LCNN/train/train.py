@@ -141,7 +141,7 @@ def placeholder_train(imgs, labels):
         img_holder = tf.placeholder(tf.float32, [args.batch_size, 128, 128, 2])
     with tf.name_scope('lab_holder'):
         lab_holder = tf.placeholder(tf.int64, [args.batch_size])
-    test_imgs, test_labs = test()
+    test_imgs, test_labs = test_list()
     loss, acc = LCNN9(img_holder, lab_holder)
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
@@ -159,7 +159,7 @@ def placeholder_train(imgs, labels):
             for j in range(args.samples_num // args.batch_size):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
-                _,  loss_value, accuracy = sess.run([train_op,loss, acc],
+                _,  loss_value, accuracy = sess.run([train_op, loss, acc],
                                                        feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
                 print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
@@ -187,49 +187,52 @@ def placeholder_train(imgs, labels):
             epoch += 1
 
 
-def test():
-    # with tf.name_scope("test_images"):
-    #     images = tf.placeholder(tf.float32, shape=[None, 128, 128, 2])
-    # with tf.name_scope("test_labels"):
-    #     labels = tf.placeholder(tf.int64, shape=[None])
-    # rgb_folder = '/home/wtx/RGBD_dataset/eaststation/'
-    # rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
-    # depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
+def test_list():
     rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Dtexture.txt'
     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
-    # _, acc = LCNN9(images, labels)
-    # accuracy = 0
-    # config = tf.ConfigProto()
-    # config.gpu_options.allow_growth = True
-    # with tf.Session(config=config) as sess:
-    # M.loadSess('../tfmodel/', sess)
-    # for i in range(len(labs)):
-    #         accuracy += sum(sess.run([acc], feed_dict={images: imgs[i][None, :, :, :], labels: [labs[i]]}))
-    # accuracy = accuracy / len(labs)
-    # print("The accuracy in Test Set: " + str(accuracy))
     return imgs, labs
 
 
-def main():
-    train_quick = 0
-    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
-    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
-    root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
-    # rgb_file_txt = '../../eaststation/train_3Dtexture.txt'
-    # depth_file_txt = '../../eaststation/train_3Ddepth.txt'
-    # root_folder = '../../eaststation/'
-    imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
-    if train_quick:
-        tfrecord_path = '../../eaststation/eaststation.tfrecord'
-        if not os.path.exists(tfrecord_path):
-            write_tfrecord(imgs, labels, tfrecord_path)
-        tfreord_train(tfrecord_path)
+def test():
+    args = parser.parse_args()
+    test_acc = 0
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
+    root_folder = '/home/wtx/RGBD_dataset/eaststation/'
+    imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+    img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
+    lab_holder = tf.placeholder(tf.int64, [None])
+    _, acc = LCNN9(img_holder, lab_holder)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
+    M.loadSess('../tfmodel/Epoc_193_Iter_108000.cpkt', sess)
+    for iter in range(len(labs)//args.batch_size):
+        test_acc += sess.run([acc], feed_dict={
+            img_holder: imgs[iter * args.batch_size:(iter+1) * args.batch_size],
+            lab_holder: labs[iter * args.batch_size:(iter+1) * args.batch_size]})
+    sess.close()
+    ave_acc = test_acc / (len(labs)//args.batch_size)
+    print('The Accuracy in Test Set:' + ave_acc)
 
-    else:
-        placeholder_train(imgs, labels)
-        # test()
+
+def main():
+    test()
+    # train_quick = 0
+    # rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
+    # depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
+    # root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
+    # imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+    # if train_quick:
+    #     tfrecord_path = '../../eaststation/eaststation.tfrecord'
+    #     if not os.path.exists(tfrecord_path):
+    #         write_tfrecord(imgs, labels, tfrecord_path)
+    #     tfreord_train(tfrecord_path)
+    #
+    # else:
+    #     placeholder_train(imgs, labels)
 
 
 if __name__ == "__main__":
