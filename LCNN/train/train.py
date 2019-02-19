@@ -1,10 +1,12 @@
+import sys
+sys.path.append('..')
 import tensorflow as tf
 import numpy as np
 import cv2
 import os
 from LCNN29 import LCNN29, LCNN9
-from LCNN.data_process.depth_preprocess import fill_hole
-from LCNN.evaluation.feature_extraction.LCNN9 import _LCNN9
+from data_process.depth_preprocess import fill_hole
+from evaluation.feature_extraction.LCNN9 import _LCNN9
 import model as M
 import argparse
 import shutil
@@ -208,7 +210,7 @@ def test():
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
     lab_holder = tf.placeholder(tf.int64, [None])
-    _, acc = _LCNN9(img_holder, lab_holder)
+    acc = _LCNN9(img_holder, lab_holder)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
