@@ -3,6 +3,8 @@ import numpy as np
 import cv2
 import os
 from LCNN29 import LCNN29, LCNN9
+from LCNN.data_process.depth_preprocess import fill_hole
+from LCNN.evaluation.feature_extraction.LCNN9 import _LCNN9
 import model as M
 import argparse
 import shutil
@@ -16,14 +18,6 @@ parser.add_argument('--batch_size', default='64', type=int, help='min batch size
 parser.add_argument('--samples_num', default='33433', type=int, help='the number of total training samples')
 
 
-def fill_hole(depth_im):
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
-    depth_im_de = cv2.morphologyEx(depth_im, cv2.MORPH_OPEN, kernel)
-    mask = np.less(depth_im, 1)
-    depth_im_de = np.where(mask, depth_im, depth_im_de)
-    return depth_im_de
-
-
 def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     imgs = []
     labels = []
@@ -33,9 +27,9 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     depth_lines = f2.readlines()
     i = 0
     for rgb_line, depth_line in zip(rgb_lines, depth_lines):
-        rgb_path = root_folder + rgb_line.split('\t')[0]
-        depth_path = root_folder + depth_line.split('\t')[0]
-        label = rgb_line.split('\t')[1].strip('\n')
+        rgb_path = root_folder + rgb_line.split(' ')[0]
+        depth_path = root_folder + depth_line.split(' ')[0]
+        label = rgb_line.split(' ')[1].strip('\n')
         if os.path.exists(rgb_path) and os.path.exists(depth_path):
             rgb = cv2.imread(rgb_path, 0)
             depth = cv2.imread(depth_path, 0)
@@ -43,7 +37,6 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
                 label = int(label)
                 labels.append(label)
                 i += 1
-                # print(i)
                 depth_de = fill_hole(depth)
                 merge_img = np.concatenate((rgb[:, :, None], depth_de[:, :, None]), axis=2)
                 merge_img = merge_img / 255
@@ -146,7 +139,7 @@ def placeholder_train(imgs, labels):
     l2_loss = tf.losses.get_regularization_loss()
     loss += l2_loss
     global_step = tf.Variable(0, trainable=False)
-    #learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
+    # learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
     #                                           decay_steps=10 * args.samples_num / args.batch_size,
     #                                           decay_rate=0.46, staircase=True)
     train_op = tf.train.MomentumOptimizer(0.00001, 0.9).minimize(loss, global_step)
@@ -159,8 +152,8 @@ def placeholder_train(imgs, labels):
             for j in range(args.samples_num // args.batch_size):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
-                _,  loss_value, accuracy = sess.run([train_op, loss, acc],
-                                                       feed_dict={img_holder: images, lab_holder: labs})
+                _, loss_value, accuracy = sess.run([train_op, loss, acc],
+                                                   feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
                 print('epoch = %d  iter = %d loss = %.2f' % (epoch, step, loss_value))
                 print('accuracy = %.2f' % accuracy)
@@ -177,14 +170,24 @@ def placeholder_train(imgs, labels):
                     shutil.copy(save_path3, save_path3.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path4, save_path4.replace('../tfmodel/', '../backup/'))
                     shutil.copy(save_path5, save_path5.replace('../tfmodel/', '../backup/'))
-                    test_acc = 0
+                    val_acc = 0
                     for it in range(len(test_labs) // args.batch_size):
-                        test_acc += sum(sess.run([acc], feed_dict={
+                        val_acc += sum(sess.run([acc], feed_dict={
                             img_holder: test_imgs[it * args.batch_size:(it + 1) * args.batch_size],
                             lab_holder: test_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
-                    test_acc = test_acc / (len(test_labs) // args.batch_size)
-                    print('The Accuracy in Val Set:' + str(test_acc))
-                    test()
+                    val_acc = val_acc / (len(test_labs) // args.batch_size)
+                    print('The Accuracy in Val Set:' + str(val_acc))
+                    test_acc = 0
+                    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
+                    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
+                    root_folder = '/home/wtx/RGBD_dataset/eaststation/'
+                    imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+                    for iter in range(len(labs) // args.batch_size):
+                        test_acc += sum(sess.run([acc], feed_dict={
+                            img_holder: imgs[iter * args.batch_size:(iter + 1) * args.batch_size],
+                            lab_holder: labs[iter * args.batch_size:(iter + 1) * args.batch_size]}))
+                    ave_acc = test_acc / (len(labs) // args.batch_size)
+                    print('The Accuracy in Test Set:' + str(ave_acc))
             epoch += 1
 
 
@@ -199,23 +202,23 @@ def test_list():
 def test():
     args = parser.parse_args()
     test_acc = 0
-    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Dtexture.txt'
-    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth.txt'
-    root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
+    root_folder = '/home/wtx/RGBD_dataset/eaststation/'
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
-    # img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
-    # lab_holder = tf.placeholder(tf.int64, [None])
-    # _, acc = LCNN9(img_holder, lab_holder)
-    # config = tf.ConfigProto()
-    # config.gpu_options.allow_growth = True
-    # sess = tf.Session(config=config)
-    # M.loadSess('../tfmodel/', sess)
-    for iter in range(len(labs)//args.batch_size):
+    img_holder = tf.placeholder(tf.float32, [None, 128, 128, 2])
+    lab_holder = tf.placeholder(tf.int64, [None])
+    _, acc = _LCNN9(img_holder, lab_holder)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
+    M.loadSess('../tfmodel/', sess)
+    for iter in range(len(labs) // args.batch_size):
         test_acc += sum(sess.run([acc], feed_dict={
-            img_holder: imgs[iter * args.batch_size:(iter+1) * args.batch_size],
-            lab_holder: labs[iter * args.batch_size:(iter+1) * args.batch_size]}))
-    # sess.close()
-    ave_acc = test_acc / (len(labs)//args.batch_size)
+            img_holder: imgs[iter * args.batch_size:(iter + 1) * args.batch_size],
+            lab_holder: labs[iter * args.batch_size:(iter + 1) * args.batch_size]}))
+    sess.close()
+    ave_acc = test_acc / (len(labs) // args.batch_size)
     print('The Accuracy in Test Set:' + str(ave_acc))
 
 
