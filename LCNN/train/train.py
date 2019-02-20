@@ -139,15 +139,15 @@ def placeholder_train(imgs, labels):
         lab_holder = tf.placeholder(tf.int64, [args.batch_size])
     val_imgs, val_labs = test_list()
     loss, acc = LCNN9(img_holder, lab_holder)
-    l2_loss = tf.losses.get_regularization_loss()
-    print('l2_loss: ' + str(l2_loss))
+    # l2_loss = tf.losses.get_regularization_loss()
+    l2_loss = tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
     total_loss = loss + l2_loss
     global_step = tf.Variable(0, trainable=False)
-    #learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
-    #                                           decay_steps=20 * args.samples_num / args.batch_size,
-    #                                           # decay_steps = 5000
-    #                                           decay_rate=0.6, staircase=True)
-    train_op = tf.train.MomentumOptimizer(0.0005, 0.9).minimize(loss, global_step)
+    learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
+                                               decay_steps=20 * args.samples_num / args.batch_size,
+                                               # decay_steps = 5000
+                                               decay_rate=0.6, staircase=True)
+    train_op = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(total_loss, global_step)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
@@ -157,10 +157,11 @@ def placeholder_train(imgs, labels):
             for j in range(args.samples_num // args.batch_size):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
-                _, loss_value,l2, tl, accuracy = sess.run([train_op, loss, l2_loss, total_loss, acc],
-                                                       feed_dict={img_holder: images, lab_holder: labs})
+                _, loss_value, l2, lr, accuracy = sess.run([train_op, loss, l2_loss, learning_rate, acc],
+                                                           feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
-                print('epoch = %d  iter = %d l2 = %.6f loss = %.2f total_loss = % .3f' % (epoch, step, l2, loss_value, tl))
+                print('epoch = %d  iter = %d l2 = %.2f loss = %.2f learning_rate = % .6f' % (
+                epoch, step, l2, loss_value, lr))
                 print('accuracy = %.2f' % accuracy)
 
                 if step % 2000 == 0:
@@ -239,7 +240,7 @@ def main():
         if not os.path.exists(tfrecord_path):
             write_tfrecord(imgs, labels, tfrecord_path)
         tfreord_train(tfrecord_path)
-    
+
     else:
         placeholder_train(imgs, labels)
 
