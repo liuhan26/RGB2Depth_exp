@@ -29,21 +29,32 @@ def concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt):
     f2 = open(depth_file_txt)
     depth_lines = f2.readlines()
     i = 0
-    for rgb_line, depth_line in zip(rgb_lines, depth_lines):
+    for rgb_line in rgb_lines:
         rgb_path = root_folder + rgb_line.split(' ')[0]
-        depth_path = root_folder + depth_line.split(' ')[0]
         label = rgb_line.split(' ')[1].strip('\n')
-        if os.path.exists(rgb_path) and os.path.exists(depth_path):
-            rgb = cv2.imread(rgb_path, 0)
-            depth = cv2.imread(depth_path, 0)
-            if rgb is not None and depth is not None:
-                label = int(label)
-                labels.append(label)
-                i += 1
-                depth_de = fill_hole(depth)
-                merge_img = np.concatenate((rgb[:, :, None], depth_de[:, :, None]), axis=2)
-                merge_img = merge_img / 255
-                imgs.append(merge_img)
+        if os.path.exists(rgb_path):
+           rgb = cv2.imread(rgb_path,0)
+           label = int(label)
+           labels.append(label)
+           rgb = rgb / 255
+           imgs.append(rgb[:,:,np.newaxis])
+           i += 1
+    print("total images: "+str(i))
+    #for rgb_line, depth_line in zip(rgb_lines, depth_lines):
+    #    rgb_path = root_folder + rgb_line.split(' ')[0]
+    #    depth_path = root_folder + depth_line.split(' ')[0]
+    #    label = rgb_line.split(' ')[1].strip('\n')
+    #    if os.path.exists(rgb_path) and os.path.exists(depth_path):
+    #        rgb = cv2.imread(rgb_path, 0)
+    #        depth = cv2.imread(depth_path, 0)
+    #        if rgb is not None and depth is not None:
+    #            label = int(label)
+    #            labels.append(label)
+    #            i += 1
+    #            depth_de = fill_hole(depth)
+    #            merge_img = np.concatenate((rgb[:, :, None], depth_de[:, :, None]), axis=2)
+    #            merge_img = merge_img / 255
+    #            imgs.append(merge_img)
     return imgs, labels
 
 
@@ -134,20 +145,20 @@ def tfreord_train(tfrecord_path):
 def placeholder_train(imgs, labels):
     args = parser.parse_args()
     with tf.name_scope('img_holder'):
-        img_holder = tf.placeholder(tf.float32, [args.batch_size, 128, 128, 2])
+        img_holder = tf.placeholder(tf.float32, [args.batch_size, 128, 128, 1])
     with tf.name_scope('lab_holder'):
         lab_holder = tf.placeholder(tf.int64, [args.batch_size])
     val_imgs, val_labs = test_list()
     loss, acc = LCNN9(img_holder, lab_holder)
     # l2_loss = tf.losses.get_regularization_loss()
-    l2_loss = tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
-    total_loss = loss + l2_loss
+    # l2_loss = tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+    # total_loss = loss + l2_loss
     global_step = tf.Variable(0, trainable=False)
     learning_rate = tf.train.exponential_decay(learning_rate=args.lr, global_step=global_step,
                                                decay_steps=20 * args.samples_num / args.batch_size,
                                                # decay_steps = 5000
                                                decay_rate=0.6, staircase=True)
-    train_op = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(total_loss, global_step)
+    train_op = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss, global_step)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
@@ -157,11 +168,11 @@ def placeholder_train(imgs, labels):
             for j in range(args.samples_num // args.batch_size):
                 images = imgs[j * args.batch_size:(j + 1) * args.batch_size]
                 labs = labels[j * args.batch_size:(j + 1) * args.batch_size]
-                _, loss_value, l2, lr, accuracy = sess.run([train_op, loss, l2_loss, learning_rate, acc],
+                _, loss_value, lr, accuracy = sess.run([train_op, loss, learning_rate, acc],
                                                            feed_dict={img_holder: images, lab_holder: labs})
                 step += 1
-                print('epoch = %d  iter = %d l2 = %.2f loss = %.2f learning_rate = % .6f' % (
-                epoch, step, l2, loss_value, lr))
+                print('epoch = %d  iter = %d  loss = %.2f learning_rate = % .6f' % (
+                epoch, step, loss_value, lr))
                 print('accuracy = %.2f' % accuracy)
 
                 if step % 2000 == 0:
@@ -183,23 +194,23 @@ def placeholder_train(imgs, labels):
                             lab_holder: val_labs[it * args.batch_size:(it + 1) * args.batch_size]}))
                     val_acc = val_acc / (len(val_labs) // args.batch_size)
                     print('The Accuracy in Val Set:' + str(val_acc))
-                    test_acc = 0
-                    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
-                    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
-                    root_folder = '/home/wtx/RGBD_dataset/eaststation/'
-                    test_imgs, test_labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
-                    for iter in range(len(test_labs) // args.batch_size):
-                        test_acc += sum(sess.run([acc], feed_dict={
-                            img_holder: test_imgs[iter * args.batch_size:(iter + 1) * args.batch_size],
-                            lab_holder: test_labs[iter * args.batch_size:(iter + 1) * args.batch_size]}))
-                    ave_acc = test_acc / (len(test_labs) // args.batch_size)
-                    print('The Accuracy in Test Set:' + str(ave_acc))
+                    # test_acc = 0
+                    #rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dgallery.txt'
+                    #depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/test/test_3Dprobe.txt'
+                    #root_folder = '/home/wtx/RGBD_dataset/eaststation/'
+                    #test_imgs, test_labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
+                    #for iter in range(len(test_labs) // args.batch_size):
+                    #   test_acc += sum(sess.run([acc], feed_dict={
+                    #        img_holder: test_imgs[iter * args.batch_size:(iter + 1) * args.batch_size],
+                    #        lab_holder: test_labs[iter * args.batch_size:(iter + 1) * args.batch_size]}))
+                    #ave_acc = test_acc / (len(test_labs) // args.batch_size)
+                    #print('The Accuracy in Test Set:' + str(ave_acc))
             epoch += 1
 
 
 def test_list():
-    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Dtexture.txt'
-    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth.txt'
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Dtexture_labels.txt'
+    depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/val_3Ddepth_labels.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     imgs, labs = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
     return imgs, labs
@@ -231,7 +242,7 @@ def test():
 def main():
     # test()
     train_quick = 0
-    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture.txt'
+    rgb_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Dtexture_labels.txt'
     depth_file_txt = '/home/wtx/RGBD_dataset/eaststation/train/train_3Ddepth.txt'
     root_folder = '/home/wtx/RGBD_dataset/eaststation/train/crop_image_realsense_128_128/'
     imgs, labels = concat_rgb_and_depth(root_folder, rgb_file_txt, depth_file_txt)
